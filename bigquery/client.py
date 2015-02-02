@@ -15,7 +15,7 @@ import apiclient.errors
 from apiclient import http as apiclient_request
 from apiclient import model as apiclient_model
 from .errors import BigQueryError, BigQueryCommunicationError, BigQueryDuplicateError, \
-                    BigQueryStreamingMaximumRowSizeExceededError
+                    BigQueryStreamingMaximumRowSizeExceededError, BigQueryAuthorizationError
 
 
 # pylint: disable=E1002
@@ -117,8 +117,7 @@ class BigQueryClient(object):
 
         elif self.oauth_credentails_file:  # Local oauth token
             http = httplib2.Http()
-            cred_file = self.oauth_credentails_file
-            storage = Storage(cred_file)
+            storage = Storage(self.oauth_credentails_file)
             credentials = storage.get()
             if not credentials:
                 raise EnvironmentError('No credential file present')
@@ -134,6 +133,8 @@ class BigQueryClient(object):
             credentials.refresh(http)
             logging.info("Using GCE authentication")
             return http
+
+        raise BigQueryAuthorizationError()
 
     @staticmethod
     def is_in_appengine():
